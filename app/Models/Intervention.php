@@ -57,9 +57,9 @@ class Intervention extends Model
 
     public function spareParts(): BelongsToMany
     {
-        return $this->belongsToMany(SparePart::class, 'intervention_parts')
-                    ->withPivot(['quantity', 'unit_price', 'discount_percent', 'observations'])
-                    ->withTimestamps();
+        return $this->belongsToMany(SparePart::class, 'intervention_parts', 'intervention_id', 'part_id')
+            ->withPivot('quantity', 'unit_price', 'discount_percent', 'observations')
+            ->withTimestamps();
     }
 
     public function report(): HasOne
