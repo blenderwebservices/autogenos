@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\App\Resources\ReportResource\Pages;
+namespace App\Filament\Resources\ReportResource\Pages;
 
-use App\Filament\App\Resources\ReportResource;
+use App\Filament\Resources\ReportResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 

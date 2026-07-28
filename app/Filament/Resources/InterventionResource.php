@@ -1,15 +1,21 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\Resources;
 
-use App\Filament\App\Resources\InterventionResource\Pages;
+use App\Filament\Resources\InterventionResource\Pages;
 use App\Models\Intervention;
+use App\Models\ErrorCodeLibrary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Http;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Forms\Set;
+use Filament\Forms\Get;
 
 class InterventionResource extends Resource
 {
@@ -99,6 +105,77 @@ class InterventionResource extends Resource
                             ->columnSpanFull(),
                         Forms\Components\KeyValue::make('ai_suggestions')
                             ->label('Sugerencias de Inteligencia Artificial (GenTech AI)')
+                            ->hintAction(
+                                Action::make('generate_ai')
+                                    ->icon('heroicon-m-sparkles')
+                                    ->color('primary')
+                                    ->label('Generar Diagnóstico AI')
+                                    ->action(function (Set $set, Get $get) {
+                                        $symptoms = $get('symptoms') ?: 'No especificados';
+                                        $errorCodes = $get('error_codes') ?? [];
+                                        
+                                        $context = '';
+                                        if (count($errorCodes) > 0) {
+                                            $codes = ErrorCodeLibrary::whereIn('code', $errorCodes)->get();
+                                            foreach ($codes as $c) {
+                                                $context .= "- Código {$c->code}: {$c->description}. Causas: " . json_encode($c->possible_causes) . ". Acciones: " . json_encode($c->recommended_actions) . "\n";
+                                            }
+                                        }
+
+                                        $prompt = "Eres un sistema experto en generadores eléctricos.
+Síntomas reportados: {$symptoms}.
+Códigos de error: " . implode(', ', $errorCodes) . ".
+Contexto técnico: {$context}
+Devuelve EXCLUSIVAMENTE un JSON válido con esta estructura:
+{
+  \"ai_suggestions\": {
+    \"Motor\": \"Revisar...\",
+    \"Sistema B\": \"Acción...\"
+  },
+  \"ai_confidence\": 90,
+  \"recommended_action\": \"inspect\"
+}
+(recommended_action debe ser EXACTAMENTE una de estas opciones: inspect, repair, replace, o rebuild)";
+
+                                        $apiKey = env('GEMINI_API_KEY');
+                                        $model = env('GEMINI_MODEL', 'gemini-3.5-flash-lite');
+                                        if (!$apiKey) {
+                                            Notification::make()->title('Falta GEMINI_API_KEY en .env')->danger()->send();
+                                            return;
+                                        }
+
+                                        try {
+                                            $response = Http::withHeaders([
+                                                'Content-Type' => 'application/json',
+                                            ])->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
+                                                'contents' => [
+                                                    ['parts' => [['text' => $prompt]]]
+                                                ],
+                                                'generationConfig' => [
+                                                    'responseMimeType' => 'application/json'
+                                                ]
+                                            ]);
+
+                                            if ($response->successful()) {
+                                                $data = $response->json();
+                                                $jsonText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
+                                                $result = json_decode($jsonText, true);
+
+                                                if ($result) {
+                                                    $set('ai_suggestions', $result['ai_suggestions'] ?? []);
+                                                    $set('ai_confidence', $result['ai_confidence'] ?? null);
+                                                    $set('recommended_action', $result['recommended_action'] ?? null);
+
+                                                    Notification::make()->title('Diagnóstico AI Generado')->success()->send();
+                                                }
+                                            } else {
+                                                Notification::make()->title('Error en API Gemini')->body($response->body())->danger()->send();
+                                            }
+                                        } catch (\Exception $e) {
+                                            Notification::make()->title('Error de Conexión')->body($e->getMessage())->danger()->send();
+                                        }
+                                    })
+                            )
                             ->keyLabel('Parámetro / Sistema')
                             ->valueLabel('Recomendación de Acción')
                             ->columnSpanFull(),
