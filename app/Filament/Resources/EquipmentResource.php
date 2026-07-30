@@ -16,6 +16,8 @@ class EquipmentResource extends Resource
     protected static ?string $model = Equipment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
+
+    protected static ?string $cluster = \App\Filament\Clusters\Clientes::class;
     protected static ?string $navigationLabel = 'Parque Electrógeno';
     protected static ?string $modelLabel = 'Equipo Electrógeno';
     protected static ?string $pluralModelLabel = 'Equipos Electrógenos';

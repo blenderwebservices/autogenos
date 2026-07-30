@@ -19,6 +19,11 @@ class CompanyResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $modelLabel = 'Empresa';
+    protected static ?string $pluralModelLabel = 'Empresas';
+    protected static ?string $navigationLabel = 'Empresas';
+
+    protected static ?string $cluster = \App\Filament\Clusters\Clientes::class;
     public static function canViewAny(): bool
     {
         return in_array(auth()->user()->role, ['admin', 'supervisor']);

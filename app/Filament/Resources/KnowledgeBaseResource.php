@@ -19,6 +19,8 @@ class KnowledgeBaseResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Informacion Tecnica';
+
     public static function canViewAny(): bool
     {
         return in_array(auth()->user()->role, ['admin', 'supervisor']);
