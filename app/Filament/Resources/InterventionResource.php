@@ -39,12 +39,25 @@ class InterventionResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->live()
                             ->label('Equipo / Generador'),
                         Forms\Components\Select::make('technician_id')
                             ->relationship('technician', 'name')
                             ->searchable()
                             ->preload()
                             ->label('Técnico Asignado'),
+                        Forms\Components\Placeholder::make('empresa_info')
+                            ->label('Empresa')
+                            ->content(function (Get $get) {
+                                if (! $get('equipment_id')) {
+                                    return '-';
+                                }
+                                $equipment = \App\Models\Equipment::with('company')->find($get('equipment_id'));
+                                return $equipment?->company?->name ?? 'Sin empresa asignada';
+                            }),
+                        Forms\Components\TextInput::make('address')
+                            ->label('Domicilio de Intervención')
+                            ->placeholder('Dirección donde se acudirá'),
                         Forms\Components\Select::make('supervisor_id')
                             ->relationship('supervisor', 'name')
                             ->searchable()
@@ -212,7 +225,8 @@ Devuelve EXCLUSIVAMENTE un JSON válido con esta estructura:
                                 Forms\Components\TextInput::make('item_description')
                                     ->required()
                                     ->placeholder('Ej: Nivel y estado de aceite del motor')
-                                    ->label('Ítem de Inspección'),
+                                    ->label('Ítem de Inspección')
+                                    ->live(onBlur: true),
                                 Forms\Components\Select::make('status')
                                     ->options([
                                         'ok' => 'OK / Estado Óptimo',

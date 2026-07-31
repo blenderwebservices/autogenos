@@ -24,11 +24,6 @@ class Equipment extends Model
         ];
     }
 
-    public function client(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'client_id');
-    }
-
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);

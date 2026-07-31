@@ -28,11 +28,7 @@ class EquipmentResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Identificación y Asignación')
                     ->schema([
-                        Forms\Components\Select::make('client_id')
-                            ->relationship('client', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->label('Cliente / Propietario'),
+
                         Forms\Components\Select::make('company_id')
                             ->relationship('company', 'name')
                             ->searchable()
@@ -140,8 +136,8 @@ class EquipmentResource extends Resource
                 Tables\Columns\TextColumn::make('model.name')
                     ->label('Modelo')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('client.name')
-                    ->label('Cliente')
+                Tables\Columns\TextColumn::make('company.name')
+                    ->label('Empresa')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('rated_power_kw')
                     ->label('Potencia')
